@@ -1,6 +1,10 @@
-// app/context/AuthContext.tsx
 import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
-import * as SecureStore from 'expo-secure-store';
+//import * as SecureStore from 'expo-secure-store';
+// Make sure to import your API method for signIn
+import { register as apiRegister, login as apiLogin, logout as apiLogout } from '../../api';
+
+
+
 
 interface AuthContextProps {
   children: ReactNode;
@@ -11,66 +15,76 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-    signIn: (email: string, password: string) => Promise<void>;
-    signOut: () => void;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => void;
+  register: (name:string, email: string, password: string) => Promise<void>; 
 }
 
-const defaultContext: AuthState = {
-  userToken: null,
-};
-
 export const AuthContext = createContext<AuthContextType>({
-    userToken: null,
-    signIn: async () => { /* This function now correctly returns a Promise<void> */ },
-    signOut: () => {},
-  });
-  
+  userToken: null,
+  signIn: async () => {},
+  register: async () => {},
+  signOut: () => {},
+});
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-      throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-  };
-
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider: React.FC<AuthContextProps> = ({ children }) => {
   const [userToken, setUserToken] = useState<string | null>(null);
 
-  // signIn now matches the signature in AuthContextType
-  const signIn = async (email: string, password: string): Promise<void> => {
-    // Here you would replace this with your actual authentication logic
-    // For example, authenticate against a backend and retrieve a token on success
-    // This is a placeholder to illustrate the function signature
+
+  const register = async (name: string, email: string, password: string): Promise<void> => {
     try {
-      // Simulate API call and token retrieval
-      const token = 'dummy_token'; // This should be the token you get back from your auth API
+      
+      // Call the register function from your API utility file
+      const response = await apiRegister({ name, email, password });
+      console.log('User token from API is: ' + JSON.stringify(response.data));
+      // Assuming the API returns a token upon successful registration
+      const token = response.data.token; // Adjust this line based on your actual API response
       setUserToken(token);
-      await SecureStore.setItemAsync('userToken', token);
+ //     await SecureStore.setItemAsync('userToken', token);
     } catch (error) {
-      // Handle errors, such as incorrect credentials or network issues
+      console.error(error);
+      throw new Error('Failed to register');
+    }
+  };
+
+
+
+  const signIn = async (email: string, password: string): Promise<void> => {
+    try {
+      const response = await apiLogin({ email, password });
+      const token = response.data.token; // Adjust according to your API response structure
+      setUserToken(token);
+ //     await SecureStore.setItemAsync('userToken', token);
+    } catch (error) {
       console.error(error);
       throw new Error('Failed to sign in');
     }
   };
 
+
   const signOut = () => {
     setUserToken(null);
-    SecureStore.deleteItemAsync('userToken');
+    // SecureStore.deleteItemAsync('userToken');
   };
 
   useEffect(() => {
-    // Check for the token in storage then load user
-    SecureStore.getItemAsync('userToken').then((token) => {
-      if (token) {
-        setUserToken(token);
-      }
-    });
+    // SecureStore.getItemAsync('userToken').then((token) => {
+    //   if (token) {
+    //     setUserToken(token);
+    //   }
+    // });
   }, []);
 
   return (
-    <AuthContext.Provider value={{ userToken, signIn, signOut }}>
+    <AuthContext.Provider value={{ userToken, signIn, signOut, register }}>
       {children}
     </AuthContext.Provider>
   );
