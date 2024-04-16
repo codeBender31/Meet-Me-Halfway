@@ -10,14 +10,14 @@
       "package": "com.yourcompany.meetmehalfway",
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyDASA8fmLTGHD2P2wTN5Bh9S5NKOET-Gtc"
+          "apiKey": "YOURAPIKEY"
         }
       }
     },
     "ios": {
       "bundleIdentifier": "com.yourcompany.meetmehalfway",
       "config": {
-        "googleMapsApiKey": "AIzaSyDASA8fmLTGHD2P2wTN5Bh9S5NKOET-Gtc"
+        "googleMapsApiKey": "YOURAPIKEY"
       }
     },
     "plugins": [
